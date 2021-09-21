@@ -1,7 +1,37 @@
+:root{
+    --pink:#FF57B2;
+    --white: #F8F8F8;
+    --black: #1A1D23;
+    --grey-medium: #BBBBBB;
+    --grey-light: #D7D7D7;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-// TODO
+html{
+  font-size: 62.5%;
+}
+
+body{
+  font-size: 1.6rem;
+  color: var(--white);
+  background-color: var(--black);
+}
+
+body, button, textarea, input, select{
+  font: 400 1.6rem 'Inter',sans-serif;
+}
+
+button{
+  cursor: pointer;
+}
+
+a{
+  text-decoration: none;
+  color: inherit;
+}
+
