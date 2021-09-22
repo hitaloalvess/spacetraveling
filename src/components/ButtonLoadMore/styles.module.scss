@@ -1,0 +1,13 @@
+.btnLoadMore{
+    font-size: 1.8rem;
+    font-weight: 600;
+    line-height: 2.2rem;
+    border: 0;
+    color: var(--pink);
+    background-color: transparent;
+    transition: filter 0.2s ease-in;
+
+    &:hover{
+        filter: brightness(0.8);
+    }
+}

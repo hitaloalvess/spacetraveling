@@ -1,1 +1,12 @@
-// TODO
+
+.container{
+    width: min(112rem, 80%);
+    margin: 0 auto;
+
+    .content{
+            width: min(80rem, 90%);
+            height: 100%;
+            margin: 0 auto;
+    }
+}
+

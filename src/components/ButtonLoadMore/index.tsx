@@ -1,7 +1,9 @@
 
+import styles from './styles.module.scss';
+
 interface ButtonLoadMoreProps{
     loadMorePosts: () => void;
-    nextPage: string;
+    nextPage: RequestInfo;
 }
 
 export default function ButtonLoadMore({ loadMorePosts, nextPage } : ButtonLoadMoreProps){
@@ -10,9 +12,10 @@ export default function ButtonLoadMore({ loadMorePosts, nextPage } : ButtonLoadM
 
     return (
         <button
+            className={styles.btnLoadMore}
             onClick={() => loadMorePosts()}
         >
-            Carregar mais posts...
+            Carregar mais posts
         </button>
     )
 }

@@ -1,15 +1,20 @@
+import { useState } from 'react';
+
 import Link from 'next/link'
+import Head from 'next/head';
+
 import { GetStaticProps } from 'next';
 import { getPrismicClient } from '../services/prismic';
 import Prismic from '@prismicio/client';
+
 import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR'
+
 import { FaUser, FaCalendar } from 'react-icons/fa'
+import ButtonLoadMore from '../components/ButtonLoadMore';
 
 import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
-import { useEffect, useState } from 'react';
-import ButtonLoadMore from '../components/ButtonLoadMore';
 
 interface Post {
   uid?: string;
@@ -32,8 +37,8 @@ interface HomeProps {
 
 export default function Home( { postsPagination } : HomeProps ) {
   
-  const [nextPage, setNextPage] = useState(postsPagination.next_page)
-  const [posts, setPosts] = useState(
+  const [nextPage, setNextPage] = useState<RequestInfo>(postsPagination.next_page)
+  const [posts, setPosts] = useState<Post[]>(
     [...postsPagination.results]
   )
 
@@ -49,16 +54,20 @@ export default function Home( { postsPagination } : HomeProps ) {
 
   return (
     <>
-       <main>
-           <div>
+      <Head>
+        <title>Ínicio | spacetraveling</title>
+      </Head>
+       <main className={commonStyles.container}>
+           <div className={`${styles.postsContent} ${commonStyles.content}`}>
              {
                posts.map( post => {
                  return(
                    <Link href="#" key={post.uid}>
-                      <a>
-                          <h1>{post.data.title}</h1>
+                      <a className={styles.post}>
+                        <h1>{post.data.title}</h1>
                           <p>{post.data.subtitle}</p>
-                          <div>
+                          <div className={styles.postInfo}>
+
                             <div>
                               <FaCalendar />
                                 {
@@ -71,7 +80,8 @@ export default function Home( { postsPagination } : HomeProps ) {
                                   )
                                 }
                             </div>
-                            <div>
+
+                            <div >
                               <FaUser />
                                 {post.data.author}
                             </div>
@@ -81,7 +91,7 @@ export default function Home( { postsPagination } : HomeProps ) {
                  )
                })
              }
-             <ButtonLoadMore 
+             <ButtonLoadMore
                 loadMorePosts={() => loadMorePosts()}
                 nextPage={nextPage}
              />
