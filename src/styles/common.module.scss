@@ -10,3 +10,22 @@
     }
 }
 
+.postInfo{
+    display: flex;
+
+    div{
+        font-size: 1.4rem;
+        font-weight: 400;
+        line-height: 1.7rem;
+        color: var(--grey-medium);
+
+        svg{
+            margin-right: 0.8rem;
+        }
+    }
+
+    div + div {
+        margin-left: 2.4rem;
+    }
+}
+

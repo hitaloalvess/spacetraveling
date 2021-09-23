@@ -8,7 +8,7 @@ import { getPrismicClient } from '../../services/prismic';
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
-import { FaCalendar, FaUser } from 'react-icons/fa';
+import { FaCalendar, FaUser, FaClock } from 'react-icons/fa';
 
 interface Post {
   first_publication_date: string | null;
@@ -33,29 +33,45 @@ interface PostProps {
 
 export default function Post( { post } : PostProps) {
 
-  console.log(post)
-
   return(
-    <h1>Post</h1>
-      // <main className={commonStyles.container}>
-      //   <img src={post.data.banner.url} alt="logo" />
-      //   <section className={commonStyles.content}>
-      //     <h1>{post.data.title}</h1>
-      //     <div>
-      //       <div>
-      //         <FaCalendar />
-      //         {}
-      //       </div>
+      <>
+        <img className={styles.logo} src={post.data.banner.url} alt="logo" />
+        <main className={`${styles.postContainer} ${commonStyles.container}`}>
+          <section className={commonStyles.content}>
+            <h1>{post.data.title}</h1>
+            <div className={commonStyles.postInfo}>
+              <div>
+                <FaCalendar />
+                {post.first_publication_date}
+              </div>
 
-      //       <div >
-      //         <FaUser />
-      //           {post.data.author}
-      //       </div>
-      //     </div>
+              <div >
+                <FaUser />
+                  {post.data.author}
+              </div>
 
-      //     <article>{post.data.content.heading}</article>
-      //   </section>
-      // </main>
+              <div >
+                <FaClock />
+                  4min
+              </div>
+            </div>
+
+            {
+              post.data.content.map( (item, index) => (
+                <article 
+                  key={index}
+                  className={styles.postBody}
+                >
+                  <h2>{item.heading}</h2>
+                  <div dangerouslySetInnerHTML={{__html:String(item.body)}}></div>
+                </article>
+              ))
+            }  
+            
+            
+          </section>
+        </main>
+      </>
   );
 }
 
@@ -70,11 +86,12 @@ export const getStaticPaths : GetStaticPaths = async () => {
 export const getStaticProps: GetStaticProps = async ({params}) => {
 
   const { slug } = params
-  
+  console.log(slug)
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('posts', String(slug), {});
 
   const content = response.data.content.map( item => {
+   
     return {
       heading: item.heading,
       body: RichText.asHtml([...item.body])

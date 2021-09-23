@@ -66,7 +66,7 @@ export default function Home( { postsPagination } : HomeProps ) {
                       <a className={styles.post}>
                         <h1>{post.data.title}</h1>
                           <p>{post.data.subtitle}</p>
-                          <div className={styles.postInfo}>
+                          <div className={commonStyles.postInfo}>
 
                             <div>
                               <FaCalendar />
