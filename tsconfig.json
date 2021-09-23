@@ -23,7 +23,7 @@
     "**/*.ts",
     "**/*.tsx",
     "**/*.spec.tsx"
-  ],
+, "src/pages/404.JS"  ],
   "exclude": [
     "node_modules"
   ]
