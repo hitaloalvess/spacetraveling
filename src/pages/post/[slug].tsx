@@ -1,5 +1,6 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
+import ErrorPage from 'next/error'
 
 import format from 'date-fns/format';
 import { ptBR } from 'date-fns/locale';
@@ -45,6 +46,10 @@ interface PostProps {
 
 export default function Post( { post, readingTimePost } : PostProps) {
   const router = useRouter()
+
+  if(!post){
+    return <ErrorPage statusCode={404} />
+  }
 
   if(router.isFallback){
       return <h1>Carregando...</h1>
@@ -115,8 +120,7 @@ export const getStaticPaths : GetStaticPaths = async () => {
 
   return{
     paths:[
-      // ...params
-      {params: {slug:'novas-features-javascript'}},
+      ...params
     ],
     fallback: true,
   }
@@ -129,51 +133,58 @@ export const getStaticProps: GetStaticProps = async ({params}) => {
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('posts', String(slug), {});
 
+  function calculateReadingTimePost(response){
+    const wordPerMinute = 200;
 
-  function calculateReadingTimePost(){
-      const wordPerMinute = 200;
+    const numberWords = response.data.content.reduce( (acc : String[], item: ContentProps) => {
+      const wordsHeading = item.heading.split(' ');
+      const wordsBody = RichText.asText([...item.body]).split(' ');
+        acc.push(...wordsHeading, ...wordsBody)
+        return acc
+    }, [])
 
-      const numberWords = response.data.content.reduce( (acc : String[], item: ContentProps) => {
-        const wordsHeading = item.heading.split(' ');
-        const wordsBody = RichText.asText([...item.body]).split(' ');
-          acc.push(...wordsHeading, ...wordsBody)
-          return acc
-      }, [])
+   const readingTime = Math.ceil( numberWords.length/ wordPerMinute);
 
-     const readingTime = Math.ceil( numberWords.length/ wordPerMinute);
-
-     return readingTime;
+   return readingTime;
   }
   
-  const content = response.data.content.map( item => {
-    return {
-      heading: item.heading,
-      body: RichText.asHtml([...item.body])
-    }
-  })
-
-  const post = {
-    first_publication_date: format(
-      new Date(response.first_publication_date),
-      "dd MMM yyyy",
-      {
-        locale: ptBR,
+   try{
+    const content = response.data.content.map( item => {
+      return {
+        heading: item.heading,
+        body: RichText.asHtml([...item.body])
       }
-    ),
-    data:{
-      title: response.data.title,
-      banner: {
-        url: response.data.banner.url
+    })
+  
+    const post = {
+      first_publication_date: format(
+        new Date(response.first_publication_date),
+        "dd MMM yyyy",
+        {
+          locale: ptBR,
+        }
+      ),
+      data:{
+        title: response.data.title,
+        banner: {
+          url: response.data.banner.url
+        },
+        author: response.data.author,
+        content: content
+      }
+    }
+  
+    return{
+      props:{
+        post,
+        readingTimePost : calculateReadingTimePost(response)
       },
-      author: response.data.author,
-      content: content
+      revalidate: 60 * 60 * 24, // 24 hrs
     }
-  }
+   } catch(error){
+      return {
+        props:{}
+      }
+   }
 
-  return{
-    props:{
-      post,
-      readingTimePost : calculateReadingTimePost()
-    }
-  }
 };
