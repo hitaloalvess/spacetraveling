@@ -16,19 +16,21 @@ import { useRouter } from 'next/router';
 
 
 interface Post {
+  uid: string;
   first_publication_date: string | null;
   data: {
-    title: string;
+    author: string;
     banner: {
       url: string;
     };
-    author: string;
     content: {
       heading: string;
       body: {
         text: string;
       }[];
     }[];
+    title: string;
+    subtitle: string;
   };
 }
 
@@ -41,10 +43,9 @@ interface ContentProps{
 
 interface PostProps {
   post: Post;
-  readingTimePost: number;
 }
 
-export default function Post( { post, readingTimePost } : PostProps) {
+export default function Post( { post } : PostProps) {
   const router = useRouter()
 
   if(!post){
@@ -54,7 +55,24 @@ export default function Post( { post, readingTimePost } : PostProps) {
   if(router.isFallback){
       return <h1>Carregando...</h1>
   }
+
+  function calculateReadingTimePost(response){
+    const wordPerMinute = 200;
+
+    const numberWords = response.data.content.reduce( (acc : String[], item: ContentProps) => {
+      const wordsHeading = item.heading.split(' ');
+      const wordsBody = RichText.asText([...item.body]).split(' ');
+        acc.push(...wordsHeading, ...wordsBody)
+        return acc
+    }, [])
+
+   const readingTime = Math.ceil( numberWords.length/ wordPerMinute);
   
+   console.log(readingTime)
+   return `${readingTime} min`;
+  }
+  
+  const time = calculateReadingTimePost(post)
     return(
       <>
         <Head>
@@ -68,7 +86,15 @@ export default function Post( { post, readingTimePost } : PostProps) {
             <div className={commonStyles.postInfo}>
               <div>
                 <FaCalendar />
-                {post.first_publication_date}
+                {
+                  format(
+                    new Date(post.first_publication_date),
+                    "dd MMM yyyy",
+                    {
+                      locale: ptBR,
+                    }
+                  )
+                }
               </div>
 
               <div >
@@ -78,7 +104,7 @@ export default function Post( { post, readingTimePost } : PostProps) {
 
               <div >
                 <FaClock />
-                {readingTimePost}min aprox.
+                {time}
               </div>
             </div>
 
@@ -89,7 +115,12 @@ export default function Post( { post, readingTimePost } : PostProps) {
                   className={styles.postBody}
                 >
                   <h2>{item.heading}</h2>
-                  <div dangerouslySetInnerHTML={{__html:String(item.body)}}></div>
+                  <div dangerouslySetInnerHTML={
+                      {
+                        __html:RichText.asHtml([...item.body])
+                      }
+                    }>
+                  </div>
                 </article>
               ))
             }  
@@ -132,54 +163,37 @@ export const getStaticProps: GetStaticProps = async ({params}) => {
   
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('posts', String(slug), {});
-
-  function calculateReadingTimePost(response){
-    const wordPerMinute = 200;
-
-    const numberWords = response.data.content.reduce( (acc : String[], item: ContentProps) => {
-      const wordsHeading = item.heading.split(' ');
-      const wordsBody = RichText.asText([...item.body]).split(' ');
-        acc.push(...wordsHeading, ...wordsBody)
-        return acc
-    }, [])
-
-   const readingTime = Math.ceil( numberWords.length/ wordPerMinute);
-
-   return readingTime;
-  }
-  
+ 
    try{
     const content = response.data.content.map( item => {
       return {
         heading: item.heading,
-        body: RichText.asHtml([...item.body])
+        body: [...item.body]//RichText.asHtml([...item.body])
+        
+        // body: [...item.body]
       }
     })
   
     const post = {
-      first_publication_date: format(
-        new Date(response.first_publication_date),
-        "dd MMM yyyy",
-        {
-          locale: ptBR,
-        }
-      ),
+      uid: response.uid,
+      first_publication_date: response.first_publication_date,
       data:{
-        title: response.data.title,
+        author: response.data.author,
         banner: {
           url: response.data.banner.url
         },
-        author: response.data.author,
-        content: content
+        content: [
+          ...content,
+        ],
+        subtitle: response.data.subtitle,
+        title: response.data.title
       }
     }
   
     return{
       props:{
-        post,
-        readingTimePost : calculateReadingTimePost(response)
-      },
-      revalidate: 60 * 60 * 24, // 24 hrs
+        post
+      }
     }
    } catch(error){
       return {
