@@ -14,6 +14,7 @@ import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 import { FaCalendar, FaUser, FaClock } from 'react-icons/fa';
 import { useRouter } from 'next/router';
+import Comments from '../../components/Comments';
 
 
 interface Post {
@@ -153,6 +154,8 @@ export default function Post( { post, prevPost, nextPost } : PostProps) {
                     }
 
             </div>
+
+            <Comments />
             
           </section>
         </main>
