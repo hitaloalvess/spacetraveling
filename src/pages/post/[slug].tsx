@@ -1,6 +1,7 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
 import ErrorPage from 'next/error'
+import Link from 'next/link'
 
 import format from 'date-fns/format';
 import { ptBR } from 'date-fns/locale';
@@ -43,9 +44,11 @@ interface ContentProps{
 
 interface PostProps {
   post: Post;
+  prevPost: Post;
+  nextPost: Post;
 }
 
-export default function Post( { post } : PostProps) {
+export default function Post( { post, prevPost, nextPost } : PostProps) {
   const router = useRouter()
 
   if(!post){
@@ -68,7 +71,6 @@ export default function Post( { post } : PostProps) {
 
    const readingTime = Math.ceil( numberWords.length/ wordPerMinute);
   
-   console.log(readingTime)
    return `${readingTime} min`;
   }
   
@@ -125,6 +127,32 @@ export default function Post( { post } : PostProps) {
               ))
             }  
             
+            <div className={styles.prevNextPost}>  
+                    {
+                      prevPost && 
+                      <div>
+                        <p>{prevPost.data.title}</p>
+                        <Link href={`/post/${prevPost.uid}`}>
+                          <a>
+                            Post anterior
+                          </a>
+                        </Link>
+                      </div>
+                    }
+
+                    {
+                      nextPost && 
+                      <div>
+                        <p>{nextPost.data.title}</p>
+                        <Link href={`/post/${nextPost.uid}`}>
+                          <a>
+                            Próximo post
+                          </a>
+                        </Link>
+                      </div>
+                    }
+
+            </div>
             
           </section>
         </main>
@@ -158,22 +186,39 @@ export const getStaticPaths : GetStaticPaths = async () => {
 };
 
 export const getStaticProps: GetStaticProps = async ({params}) => {
-
-  const { slug } = params
+  try{
   
-  const prismic = getPrismicClient();
-  const response = await prismic.getByUID('posts', String(slug), {});
- 
-   try{
+    const { slug } = params
+    const prismic = getPrismicClient();
+    const response = await prismic.getByUID('posts', String(slug), {});
+  
+    const nextResponse = await prismic.query(
+      Prismic.predicates.at('document.type', 'posts'),
+      {
+        pageSize: 1,
+        after: response?.id,
+        orderings: '[document.first_publication_date desc]'
+      }
+    )
+
+    const prevResponse = await prismic.query(
+      Prismic.predicates.at('document.type', 'posts'),
+      {
+        pageSize: 1,
+        after: response?.id,
+        orderings: '[document.first_publication_date]'
+      }
+    )
+    
+    
     const content = response.data.content.map( item => {
       return {
         heading: item.heading,
-        body: [...item.body]//RichText.asHtml([...item.body])
+        body: [...item.body]
         
-        // body: [...item.body]
       }
     })
-  
+    
     const post = {
       uid: response.uid,
       first_publication_date: response.first_publication_date,
@@ -189,14 +234,19 @@ export const getStaticProps: GetStaticProps = async ({params}) => {
         title: response.data.title
       }
     }
-  
+    
+    const prevPost = prevResponse?.results[0] || null;
+    const nextPost = nextResponse?.results[0] || null; 
+    
     return{
       props:{
-        post
+        post,
+        prevPost,
+        nextPost,
       }
     }
    } catch(error){
-      return {
+     return {
         props:{}
       }
    }
