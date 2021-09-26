@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 
+import styles from './styles.module.scss'
 export default function Comments(){
 
     useEffect(() => {

@@ -15,6 +15,7 @@ import ButtonLoadMore from '../components/ButtonLoadMore';
 
 import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
+import PreviewButton from '../components/PreviewButton';
 
 interface Post {
   uid?: string;
@@ -33,16 +34,17 @@ interface PostPagination {
 
 interface HomeProps {
   postsPagination: PostPagination;
+  preview: boolean;
 }
 
-export default function Home( { postsPagination } : HomeProps ) {
+export default function Home( { postsPagination, preview } : HomeProps ) {
   
   const [nextPage, setNextPage] = useState<RequestInfo>(postsPagination.next_page)
   const [posts, setPosts] = useState<Post[]>(
     [...postsPagination.results]
   )
 
-  async function loadMorePosts(){
+  async function loadMorePosts() : Promise<void>{
     const response = await fetch(nextPage);
     const data = await response.json();
 
@@ -67,23 +69,24 @@ export default function Home( { postsPagination } : HomeProps ) {
                         <h1>{post.data.title}</h1>
                           <p>{post.data.subtitle}</p>
                           <div className={commonStyles.postInfo}>
-
                             <div>
-                              <FaCalendar />
-                                {
-                                  format(
-                                    new Date(post.first_publication_date),
-                                    "dd MMM yyyy",
+                                <span>
+                                  <FaCalendar />
                                     {
-                                      locale: ptBR,
+                                      format(
+                                        new Date(post.first_publication_date),
+                                        "dd MMM yyyy",
+                                        {
+                                          locale: ptBR,
+                                        }
+                                      )
                                     }
-                                  )
-                                }
-                            </div>
+                                </span>
 
-                            <div >
-                              <FaUser />
-                                {post.data.author}
+                                <span>
+                                  <FaUser />
+                                    {post.data.author}
+                                </span>
                             </div>
                           </div>
                       </a>
@@ -95,6 +98,10 @@ export default function Home( { postsPagination } : HomeProps ) {
                 loadMorePosts={() => loadMorePosts()}
                 nextPage={nextPage}
              />
+
+            {
+               preview && <PreviewButton />
+            }
            </div>
        </main>
     </>
@@ -103,14 +110,15 @@ export default function Home( { postsPagination } : HomeProps ) {
   
 }
 
-export const getStaticProps: GetStaticProps = async () => {
+export const getStaticProps: GetStaticProps = async ({ preview = false, previewData}) => {
   const prismic = getPrismicClient();
   
   const postsResponse = await prismic.query(
     [Prismic.predicates.at('document.type', 'posts')],
       {
         fetch:['posts.title', 'posts.subtitle', 'posts.author', 'posts.banner','posts.content'],
-        pageSize: 1
+        pageSize: 1,
+        ref: previewData?.ref ?? null
       }
   );
 
@@ -133,7 +141,8 @@ export const getStaticProps: GetStaticProps = async () => {
         postsPagination:{
           next_page: nextPage,
           results: posts
-        }
+        },
+        preview
       },
       revalidate: 60 * 60 * 24, // 24 horas
     }

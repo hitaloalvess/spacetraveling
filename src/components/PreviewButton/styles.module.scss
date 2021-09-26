@@ -1,0 +1,19 @@
+.previewButtonContainer{
+    text-align: center;
+    border-radius: 0.4rem;
+    background-color: var(--white);
+    transition: filter 0.2s ease-in-out;
+    margin-top: 8rem;
+    &:hover{
+        filter: brightness(0.8);
+    }
+    
+    a{
+        display: block;
+        padding: 1.8rem 0;
+        font-size: 1.8rem;
+        line-height: 2.2rem;
+        font-weight: bold;
+        color: var(--black);
+    }
+}
